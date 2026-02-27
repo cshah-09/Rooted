@@ -18,29 +18,28 @@ body {
       #faf7f2;
     display:flex;
     flex-direction:column;
+    justify-content:space-between;
     align-items:center;
-    justify-content:center;
     text-align:center;
     overflow:hidden;
+}
+
+.top-section {
+    padding-top:60px;
 }
 
 h1 {
     font-family:'Playfair Display',serif;
     font-size:2.2rem;
     color:#2e2e2e;
-    margin-bottom:8px;
+    margin-bottom:25px;
 }
 
 #task {
     font-size:1.1rem;
     color:#555;
     max-width:320px;
-    margin-bottom:25px;
-}
-
-#plant {
-    margin-top:30px;
-    margin-bottom:30px;
+    margin:0 auto 20px auto;
 }
 
 button {
@@ -61,9 +60,17 @@ button:hover {
 }
 
 #message {
-    margin-top:15px;
+    margin-top:12px;
     font-size:0.95rem;
     color:#666;
+}
+
+.bottom-section {
+    width:100%;
+    display:flex;
+    justify-content:center;
+    align-items:flex-end;
+    padding-bottom:40px;
 }
 
 #counter {
@@ -79,13 +86,16 @@ button:hover {
 
 <div id="counter"></div>
 
-<h1>WellClose</h1>
-<div id="task"></div>
+<div class="top-section">
+    <h1>Rooted</h1>
+    <div id="task"></div>
+    <button onclick="completeTask()">Task Completed!!</button>
+    <div id="message"></div>
+</div>
 
-<div id="plant"></div>
-
-<button onclick="completeTask()">Task Completed!!</button>
-<div id="message"></div>
+<div class="bottom-section">
+    <div id="plant"></div>
+</div>
 
 <script>
 const tasks = [
@@ -145,15 +155,24 @@ function renderPlant() {
     const stage = data.completedDays.length;
     const plant = document.getElementById("plant");
 
-    const canopySize = 30 + stage*10;
+    const canopySize = 35 + stage*8;
 
     plant.innerHTML = `
-    <svg width="200" height="220">
-        <rect x="95" y="120" width="10" height="60" fill="#8b5e3c"/>
-        <circle cx="100" cy="110" r="${canopySize}" fill="#b8e6c1"/>
-        <circle cx="80" cy="110" r="${canopySize*0.7}" fill="#c9f0d2"/>
-        <circle cx="120" cy="110" r="${canopySize*0.7}" fill="#c9f0d2"/>
-        ${data.trees===0 && stage>=4 ? `<circle cx="100" cy="100" r="6" fill="#ff6b6b"/>` : ``}
+    <svg width="260" height="260">
+        <!-- Soil -->
+        <ellipse cx="130" cy="220" rx="90" ry="25" fill="#9c6b4f"/>
+        <ellipse cx="130" cy="215" rx="90" ry="20" fill="#b07a5a"/>
+
+        <!-- Trunk -->
+        <rect x="123" y="130" width="14" height="80" rx="4" fill="#8b5e3c"/>
+
+        <!-- Canopy layers -->
+        <circle cx="130" cy="120" r="${canopySize}" fill="#b8e6c1"/>
+        <circle cx="105" cy="125" r="${canopySize*0.75}" fill="#c9f0d2"/>
+        <circle cx="155" cy="125" r="${canopySize*0.75}" fill="#c9f0d2"/>
+        <circle cx="130" cy="95" r="${canopySize*0.65}" fill="#d7f7df"/>
+
+        ${data.trees===0 && stage>=4 ? `<circle cx="140" cy="110" r="6" fill="#ff6b6b"/>` : ``}
     </svg>
     `;
 }
