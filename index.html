@@ -3,263 +3,168 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WellClose 🌿</title>
+<title>WellClose</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=Caveat:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500&family=DM+Sans:wght@400;500&family=Caveat:wght@500&display=swap" rel="stylesheet">
 
 <style>
-
-:root {
-  --cream: #fdfaf7;
-  --blush: #f4d7df;
-  --rose: #dba8b8;
-  --text: #3a3a3a;
-}
-
 body {
-  margin:0;
-  height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  background: radial-gradient(circle at center, var(--cream) 0%, var(--blush) 100%);
-  font-family: 'Playfair Display', serif;
-  color:var(--text);
-  overflow:hidden;
-  animation: breathe 12s ease-in-out infinite alternate;
+    margin:0;
+    height:100vh;
+    font-family:'DM Sans',sans-serif;
+    background:
+      radial-gradient(circle at 20% 20%, #fce7f3 0%, transparent 40%),
+      radial-gradient(circle at 80% 80%, #ede9fe 0%, transparent 40%),
+      #faf7f2;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    overflow:hidden;
 }
 
-@keyframes breathe {
-  from { background-size:100% 100%; }
-  to { background-size:110% 110%; }
+h1 {
+    font-family:'Playfair Display',serif;
+    font-size:2.2rem;
+    color:#2e2e2e;
+    margin-bottom:8px;
 }
 
-.container {
-  text-align:center;
-  max-width:600px;
-  padding:40px;
-  position:relative;
+#task {
+    font-size:1.1rem;
+    color:#555;
+    max-width:320px;
+    margin-bottom:25px;
 }
 
-.task {
-  font-size:24px;
-  margin-bottom:40px;
+#plant {
+    margin-top:30px;
+    margin-bottom:30px;
 }
 
 button {
-  font-family:'Caveat', cursive;
-  font-size:22px;
-  padding:12px 35px;
-  border:none;
-  border-radius:30px;
-  background:rgba(219,168,184,0.5);
-  cursor:pointer;
-  backdrop-filter: blur(6px);
-  transition:0.3s ease;
+    padding:14px 28px;
+    border:none;
+    border-radius:30px;
+    font-family:'Caveat',cursive;
+    font-size:1.4rem;
+    background:#ffffffcc;
+    backdrop-filter:blur(6px);
+    cursor:pointer;
+    transition:all 0.3s ease;
 }
 
 button:hover {
-  background:rgba(219,168,184,0.8);
-  transform:scale(1.05);
-}
-
-.hidden { display:none; }
-
-#plant {
-  margin-top:30px;
-  height:180px;
+    transform:translateY(-2px);
+    background:#ffffff;
 }
 
 #message {
-  margin-top:15px;
-  font-size:16px;
+    margin-top:15px;
+    font-size:0.95rem;
+    color:#666;
 }
 
-#treesCounter {
-  position:fixed;
-  bottom:20px;
-  right:25px;
-  font-size:13px;
-  opacity:0.6;
+#counter {
+    position:absolute;
+    top:20px;
+    right:25px;
+    font-size:0.9rem;
+    color:#444;
 }
-
-#overlay {
-  position:fixed;
-  inset:0;
-  background:radial-gradient(circle at center, transparent 20%, rgba(0,0,0,0.25) 100%);
-  opacity:0;
-  pointer-events:none;
-  transition:opacity 1s ease;
-}
-
-.showOverlay {
-  opacity:1;
-}
-
 </style>
 </head>
 <body>
 
-<div id="overlay"></div>
+<div id="counter"></div>
 
-<div class="container">
+<h1>WellClose</h1>
+<div id="task"></div>
 
-  <div id="task" class="task"></div>
-  <button id="doneBtn">I am doneeeee</button>
+<div id="plant"></div>
 
-  <div id="plant"></div>
-  <div id="message"></div>
-
-</div>
-
-<div id="treesCounter"></div>
+<button onclick="completeTask()">Task Completed!!</button>
+<div id="message"></div>
 
 <script>
-
-/* ===============================
-   TASK SYSTEM (First 7 demo)
-================================ */
-
 const tasks = [
-"Take a 10-minute walk without your phone.",
-"Write down one thought that keeps repeating and leave it on paper.",
-"Send a genuine I appreciate you message.",
-"Do one small task you’ve been avoiding.",
-"Notice one thing draining your energy this week.",
-"Create something small. Even a doodle.",
-"Spend 15 minutes planning one small future-you move."
+"Drink 6 glasses of water today.",
+"Declutter one small space.",
+"Go for a 15 min walk.",
+"No scrolling 30 mins before bed.",
+"Eat one clean meal.",
+"Text someone you appreciate.",
+"Plan tomorrow in 3 bullet points."
 ];
 
-/* ===============================
-   STORAGE KEYS
-================================ */
+const now = new Date();
+const pst = new Date(now.toLocaleString("en-US",{timeZone:"America/Los_Angeles"}));
+const todayKey = pst.toDateString();
 
-const STORAGE = {
-  startDate: "wc_startDate",
-  weekStart: "wc_weekStart",
-  completedDays: "wc_completedDays",
-  totalTrees: "wc_totalTrees",
-  lastCompletionDate: "wc_lastCompletionDate"
+let data = JSON.parse(localStorage.getItem("wellclose")) || {
+    weekStart: todayKey,
+    completedDays: [],
+    trees: 0
 };
 
-/* ===============================
-   INITIALIZE USER
-================================ */
-
-function todayString() {
-  return new Date().toISOString().split("T")[0];
+function isNewWeek() {
+    const start = new Date(data.weekStart);
+    const diff = Math.floor((pst - start)/(1000*60*60*24));
+    return diff >= 7;
 }
 
-if (!localStorage.getItem(STORAGE.startDate)) {
-  localStorage.setItem(STORAGE.startDate, todayString());
-  localStorage.setItem(STORAGE.weekStart, todayString());
-  localStorage.setItem(STORAGE.completedDays, "0");
-  localStorage.setItem(STORAGE.totalTrees, "0");
+function resetWeekIfNeeded() {
+    if (isNewWeek()) {
+        if (data.completedDays.length === 7) {
+            data.trees += 1;
+        }
+        data.weekStart = todayKey;
+        data.completedDays = [];
+        document.getElementById("message").innerText="New week. New growth.";
+    }
 }
 
-let weekStart = localStorage.getItem(STORAGE.weekStart);
-let completedDays = parseInt(localStorage.getItem(STORAGE.completedDays));
-let totalTrees = parseInt(localStorage.getItem(STORAGE.totalTrees));
-let lastCompletionDate = localStorage.getItem(STORAGE.lastCompletionDate);
+resetWeekIfNeeded();
 
-const today = todayString();
+const dayIndex = Math.floor((pst - new Date(data.weekStart))/(1000*60*60*24));
+document.getElementById("task").innerText = tasks[dayIndex] || "Come back tomorrow 🌿";
 
-/* ===============================
-   WEEK CHECK
-================================ */
-
-function daysBetween(d1, d2) {
-  return Math.floor((new Date(d2) - new Date(d1)) / (1000*60*60*24));
+function completeTask() {
+    if (data.completedDays.includes(todayKey)) {
+        document.getElementById("message").innerText="heyy, only one task a day 🌿";
+        return;
+    }
+    data.completedDays.push(todayKey);
+    localStorage.setItem("wellclose",JSON.stringify(data));
+    renderPlant();
+    document.getElementById("message").innerText="Proud of you 🌱";
 }
-
-if (daysBetween(weekStart, today) >= 7) {
-  if (completedDays >= 4) {
-    totalTrees++;
-    localStorage.setItem(STORAGE.totalTrees, totalTrees);
-  }
-  localStorage.setItem(STORAGE.weekStart, today);
-  localStorage.setItem(STORAGE.completedDays, "0");
-  completedDays = 0;
-  document.getElementById("message").innerText = "New week. New growth.";
-}
-
-/* ===============================
-   DAILY TASK
-================================ */
-
-const startDate = localStorage.getItem(STORAGE.startDate);
-const dayIndex = daysBetween(startDate, today);
-document.getElementById("task").innerText = tasks[dayIndex % tasks.length];
-
-/* ===============================
-   SHOW CURRENT PLANT STATE
-================================ */
 
 function renderPlant() {
-  let leaves = completedDays;
-  let treeForm = completedDays >= 4;
+    const stage = data.completedDays.length;
+    const plant = document.getElementById("plant");
 
-  let svg = `<svg viewBox="0 0 200 200" width="150">`;
+    const canopySize = 30 + stage*10;
 
-  svg += `<line x1="100" y1="150" x2="100" y2="${150 - leaves*10}" stroke="#6b8e23" stroke-width="3"/>`;
-
-  for (let i=0; i<leaves; i++) {
-    svg += `<ellipse cx="${85 - i*2}" cy="${130 - i*12}" rx="8" ry="4" fill="#8fbf73"/>`;
-    svg += `<ellipse cx="${115 + i*2}" cy="${130 - i*12}" rx="8" ry="4" fill="#8fbf73"/>`;
-  }
-
-  if (treeForm) {
-    svg += `<circle cx="100" cy="70" r="35" fill="#6ca965"/>`;
-  }
-
-  if (treeForm && totalTrees === 0 && daysBetween(startDate, today) < 7) {
-    svg += `<circle cx="120" cy="75" r="6" fill="red"/>`;
-    document.getElementById("message").innerText =
-    "couldn't afford the iphone apple, but you deserve this 🫶";
-  }
-
-  svg += `</svg>`;
-  document.getElementById("plant").innerHTML = svg;
+    plant.innerHTML = `
+    <svg width="200" height="220">
+        <rect x="95" y="120" width="10" height="60" fill="#8b5e3c"/>
+        <circle cx="100" cy="110" r="${canopySize}" fill="#b8e6c1"/>
+        <circle cx="80" cy="110" r="${canopySize*0.7}" fill="#c9f0d2"/>
+        <circle cx="120" cy="110" r="${canopySize*0.7}" fill="#c9f0d2"/>
+        ${data.trees===0 && stage>=4 ? `<circle cx="100" cy="100" r="6" fill="#ff6b6b"/>` : ``}
+    </svg>
+    `;
 }
 
 renderPlant();
 
-/* ===============================
-   DAILY COMPLETION
-================================ */
+document.getElementById("counter").innerText="Total Trees Planted → "+data.trees;
 
-if (lastCompletionDate === today) {
-  document.getElementById("task").classList.add("hidden");
-  document.getElementById("doneBtn").classList.add("hidden");
-  document.getElementById("message").innerText = "heyy, only one task a day 🌿";
+if (data.completedDays.includes(todayKey)) {
+    document.getElementById("message").innerText="heyy, only one task a day 🌿";
 }
-
-document.getElementById("doneBtn").addEventListener("click", () => {
-
-  document.getElementById("overlay").classList.add("showOverlay");
-
-  setTimeout(() => {
-    document.getElementById("overlay").classList.remove("showOverlay");
-  },1200);
-
-  completedDays++;
-  localStorage.setItem(STORAGE.completedDays, completedDays);
-  localStorage.setItem(STORAGE.lastCompletionDate, today);
-
-  document.getElementById("task").classList.add("hidden");
-  document.getElementById("doneBtn").classList.add("hidden");
-
-  renderPlant();
-
-});
-
-/* ===============================
-   TREE COUNTER
-================================ */
-
-document.getElementById("treesCounter").innerText =
-"Total trees planted: " + totalTrees;
-
 </script>
 
 </body>
