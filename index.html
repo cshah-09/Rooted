@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WellClose</title>
+<title>Rooted</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500&family=DM+Sans:wght@400;500&family=Caveat:wght@500&display=swap" rel="stylesheet">
 
 <style>
-body {
+body{
     margin:0;
     height:100vh;
     font-family:'DM Sans',sans-serif;
@@ -18,80 +18,83 @@ body {
       #faf7f2;
     display:flex;
     flex-direction:column;
-    justify-content:space-between;
     align-items:center;
     text-align:center;
     overflow:hidden;
+    position:relative;
 }
 
-.top-section {
-    padding-top:60px;
-}
-
-h1 {
+h1{
     font-family:'Playfair Display',serif;
-    font-size:2.2rem;
+    font-size:2.3rem;
+    margin-top:25px;
+    margin-bottom:10px;
     color:#2e2e2e;
-    margin-bottom:25px;
 }
 
-#task {
-    font-size:1.1rem;
-    color:#555;
-    max-width:320px;
-    margin:0 auto 20px auto;
+#task{
+    font-family:'Caveat',cursive;
+    font-size:1.9rem;
+    color:#444;
+    max-width:360px;
+    margin:35px auto 25px auto;
+    line-height:1.4;
 }
 
-button {
-    padding:14px 28px;
+button{
+    padding:14px 30px;
     border:none;
     border-radius:30px;
     font-family:'Caveat',cursive;
-    font-size:1.4rem;
+    font-size:1.5rem;
     background:#ffffffcc;
     backdrop-filter:blur(6px);
     cursor:pointer;
     transition:all 0.3s ease;
 }
 
-button:hover {
+button:hover{
     transform:translateY(-2px);
     background:#ffffff;
 }
 
-#message {
-    margin-top:12px;
+#message{
+    margin-top:15px;
     font-size:0.95rem;
     color:#666;
 }
 
-.bottom-section {
-    width:100%;
-    display:flex;
-    justify-content:center;
-    align-items:flex-end;
-    padding-bottom:40px;
-}
-
-#counter {
+#counter{
     position:absolute;
     top:20px;
     right:25px;
     font-size:0.9rem;
     color:#444;
 }
+
+.bottom-section{
+    position:absolute;
+    bottom:0;
+    width:100%;
+    display:flex;
+    justify-content:center;
+    align-items:flex-end;
+    padding-bottom:20px;
+}
 </style>
 </head>
+
 <body>
 
 <div id="counter"></div>
 
-<div class="top-section">
-    <h1>Rooted</h1>
-    <div id="task"></div>
-    <button onclick="completeTask()">Task Completed!!</button>
-    <div id="message"></div>
-</div>
+<h1>Rooted</h1>
+
+<div id="task"></div>
+
+<button id="completeBtn" onclick="completeTask()">Task Completed!!</button>
+
+<div id="message"></div>
 
 <div class="bottom-section">
     <div id="plant"></div>
@@ -112,21 +115,21 @@ const now = new Date();
 const pst = new Date(now.toLocaleString("en-US",{timeZone:"America/Los_Angeles"}));
 const todayKey = pst.toDateString();
 
-let data = JSON.parse(localStorage.getItem("wellclose")) || {
+let data = JSON.parse(localStorage.getItem("rooted")) || {
     weekStart: todayKey,
     completedDays: [],
     trees: 0
 };
 
-function isNewWeek() {
+function isNewWeek(){
     const start = new Date(data.weekStart);
     const diff = Math.floor((pst - start)/(1000*60*60*24));
     return diff >= 7;
 }
 
-function resetWeekIfNeeded() {
-    if (isNewWeek()) {
-        if (data.completedDays.length === 7) {
+function resetWeekIfNeeded(){
+    if(isNewWeek()){
+        if(data.completedDays.length === 7){
             data.trees += 1;
         }
         data.weekStart = todayKey;
@@ -140,21 +143,24 @@ resetWeekIfNeeded();
 const dayIndex = Math.floor((pst - new Date(data.weekStart))/(1000*60*60*24));
 document.getElementById("task").innerText = tasks[dayIndex] || "Come back tomorrow 🌿";
 
-function completeTask() {
-    if (data.completedDays.includes(todayKey)) {
+function completeTask(){
+    if(data.completedDays.includes(todayKey)){
         document.getElementById("message").innerText="heyy, only one task a day 🌿";
         return;
     }
+
     data.completedDays.push(todayKey);
-    localStorage.setItem("wellclose",JSON.stringify(data));
+    localStorage.setItem("rooted",JSON.stringify(data));
+
     renderPlant();
+
     document.getElementById("message").innerText="Proud of you 🌱";
+    document.getElementById("completeBtn").style.display="none";
 }
 
-function renderPlant() {
+function renderPlant(){
     const stage = data.completedDays.length;
     const plant = document.getElementById("plant");
-
     const canopySize = 35 + stage*8;
 
     plant.innerHTML = `
@@ -166,7 +172,7 @@ function renderPlant() {
         <!-- Trunk -->
         <rect x="123" y="130" width="14" height="80" rx="4" fill="#8b5e3c"/>
 
-        <!-- Canopy layers -->
+        <!-- Canopy -->
         <circle cx="130" cy="120" r="${canopySize}" fill="#b8e6c1"/>
         <circle cx="105" cy="125" r="${canopySize*0.75}" fill="#c9f0d2"/>
         <circle cx="155" cy="125" r="${canopySize*0.75}" fill="#c9f0d2"/>
@@ -181,8 +187,9 @@ renderPlant();
 
 document.getElementById("counter").innerText="Total Trees Planted → "+data.trees;
 
-if (data.completedDays.includes(todayKey)) {
+if(data.completedDays.includes(todayKey)){
     document.getElementById("message").innerText="heyy, only one task a day 🌿";
+    document.getElementById("completeBtn").style.display="none";
 }
 </script>
 
